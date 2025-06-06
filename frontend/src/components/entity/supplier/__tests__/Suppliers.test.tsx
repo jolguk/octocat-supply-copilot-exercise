@@ -1,12 +1,12 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from 'react-query';
-import { Suppliers } from '../Suppliers';
+import Suppliers from '../Suppliers';
 
 // Mock axios
 vi.mock('axios');
 
-// Mock React Query to avoid loading state
+// Mock React Query
 vi.mock('react-query', async () => {
   const actual = await vi.importActual('react-query');
   return {
@@ -41,16 +41,17 @@ describe('Suppliers Component', () => {
         retry: false,
       },
     },
-  });
-
-  it('displays loading state initially', () => {
+  });  it('displays loading state initially', () => {
     // Set up the loading state
-    const { useQuery } = require('react-query');
-    useQuery.mockReturnValue({
+    const useQueryMock = vi.fn().mockReturnValue({
       isLoading: true,
       error: null,
       data: null
     });
+    
+    // Import and assign the mock
+    const reactQuery = require('react-query');
+    reactQuery.useQuery = useQueryMock;
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -58,17 +59,20 @@ describe('Suppliers Component', () => {
       </QueryClientProvider>
     );
 
-    expect(screen.getByRole('status')).toBeInTheDocument();
+    // Look for the loading spinner
+    expect(document.querySelector('.animate-spin')).toBeInTheDocument();
   });
-
   it('displays suppliers after loading', () => {
     // Mock a successful query result
-    const { useQuery } = require('react-query');
-    useQuery.mockReturnValue({
+    const useQueryMock = vi.fn().mockReturnValue({
       isLoading: false,
       error: null,
       data: mockSuppliers
     });
+    
+    // Import and assign the mock
+    const reactQuery = require('react-query');
+    reactQuery.useQuery = useQueryMock;
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -81,24 +85,25 @@ describe('Suppliers Component', () => {
     expect(screen.getByText('Global Distributors')).toBeInTheDocument();
     expect(screen.getByText('Jane Doe')).toBeInTheDocument();
     expect(screen.getByText('john@globaldist.com')).toBeInTheDocument();
-  });
-
-  it('displays error message when API call fails', () => {
+  });  it('displays error message when API call fails', () => {
     // Mock an error state
-    const { useQuery } = require('react-query');
-    useQuery.mockReturnValue({
+    const useQueryMock = vi.fn().mockReturnValue({
       isLoading: false,
       error: new Error('Failed to fetch suppliers'),
       data: null
     });
+    
+    // Import and assign the mock
+    const reactQuery = require('react-query');
+    reactQuery.useQuery = useQueryMock;
 
     render(
       <QueryClientProvider client={queryClient}>
         <Suppliers />
       </QueryClientProvider>
     );
-
-    // Check for error message
-    expect(screen.getByText(/Error loading suppliers/i)).toBeInTheDocument();
+    
+    expect(screen.getByText('Error loading suppliers. Please try again later.')).toBeInTheDocument();
+    expect(screen.getByText('Try Again')).toBeInTheDocument();
   });
 });

@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useQuery } from 'react-query';
 import { api } from '../../../api/config';
 import { useCart } from '../../../context/CartContext';
+import FartSound from '../../effects/FartSound';
 
 interface Product {
   productId: number;
@@ -42,6 +43,7 @@ const fetchProducts = async (): Promise<Product[]> => {
 
 export default function Products() {
   const [quantities, setQuantities] = useState<Record<number, number>>({});
+  const [playFartSound, setPlayFartSound] = useState(false);
   const { data: products, isLoading, error, refetch } = useQuery('products', fetchProducts, {
     onError: (err) => {
       console.error('Query error in Products component:', err);
@@ -55,8 +57,7 @@ export default function Products() {
       [productId]: Math.max(0, (prev[productId] || 0) + change)
     }));
   };
-  
-  const handleAddToCart = (productId: number) => {
+    const handleAddToCart = (productId: number) => {
     const quantity = quantities[productId] || 0;
     if (quantity > 0) {
       const product = products?.find(p => p.productId === productId);
@@ -68,6 +69,8 @@ export default function Products() {
           image: `/${product.imgName}`,
           quantity: quantity
         });
+        // Play fart sound with animation on the product card
+        setPlayFartSound(prev => !prev);
         // Reset quantity after adding to cart
         setQuantities(prev => ({
           ...prev,
@@ -105,16 +108,23 @@ export default function Products() {
         </div>
       </div>
     );
-  }
-
-  return (
+  }  return (
     <div className="min-h-screen bg-dark pt-20 px-4">
+      <FartSound 
+        playSound={playFartSound} 
+        onSoundPlayed={() => console.log('Fart sound played!')} 
+        targetElementId={products && products.length > 0 ? `product-${products[0].productId}` : undefined}
+        soundVariation="loud"
+      />
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold text-light mb-6">Products</h1>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {products?.map((product) => (
-            <div key={product.productId} className="bg-gray-800 rounded-lg overflow-hidden shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-[0_0_25px_rgba(118,184,82,0.3)]">
+          {products?.map((product) => (            <div 
+              key={product.productId} 
+              className="bg-gray-800 rounded-lg overflow-hidden shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-[0_0_25px_rgba(118,184,82,0.3)]"
+              id={`product-${product.productId}`}
+            >
               <div className="relative">
                 <img 
                   src={`/${product.imgName}`} 

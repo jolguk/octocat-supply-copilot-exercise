@@ -12,14 +12,14 @@ import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import CartPage from './components/cart/CartPage';
 import AdminProducts from './components/admin/AdminProducts';
+import RandomFartOnClick from './components/RandomFartOnClick';
 import queryClient from './api/query';
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <CartProvider>
-          <Router>
+        <CartProvider>          <Router>
             <div className="flex flex-col min-h-screen bg-dark">
               <Navigation />
               <main className="flex-grow">
@@ -33,6 +33,7 @@ function App() {
                 </Routes>
               </main>
               <Footer />
+              <RandomFartOnClick />
             </div>
           </Router>
         </CartProvider>

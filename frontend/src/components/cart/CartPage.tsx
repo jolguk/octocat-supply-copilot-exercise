@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useCart } from '../../context/CartContext';
 import { Link } from 'react-router-dom';
+import FartSound from '../effects/FartSound';
 
 const CartPage: React.FC = () => {
   const { items, removeItem, updateQuantity, getSubtotal } = useCart();
   const [couponCode, setCouponCode] = useState('');
   const [discount, setDiscount] = useState(0);
-  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);  const [playFartSound, setPlayFartSound] = useState(false);
+  const [removedItemId, setRemovedItemId] = useState<string | null>(null);
   
   const subtotal = getSubtotal();
   const shippingCost = items.length > 0 ? 10 : 0;
@@ -16,20 +18,32 @@ const CartPage: React.FC = () => {
   const handleQuantityChange = (itemId: string, quantity: number) => {
     updateQuantity(itemId, quantity);
   };
-
   const handleRemoveItem = (itemId: string) => {
-    removeItem(itemId);
+    setRemovedItemId(itemId);
+    setPlayFartSound(prev => !prev); // Toggle to trigger sound effect
+    
+    // Add a small delay before removing the item to allow animation to complete
+    setTimeout(() => {
+      removeItem(itemId);
+      setRemovedItemId(null);
+    }, 600);
   };
 
-  const handleApplyCoupon = () => {
+  const handleCheckout = () => {
+    setPlayFartSound(prev => !prev); // Toggle to trigger sound effect
+    alert('Thank you for your order! (This is just a demo)');
+  };
+    const handleApplyCoupon = () => {
     setIsApplyingCoupon(true);
     
     // Simulate API call delay
     setTimeout(() => {
       if (couponCode.toLowerCase() === 'discount5') {
         setDiscount(5);
+        setPlayFartSound(prev => !prev); // Toggle to trigger sound effect
       } else if (couponCode.toLowerCase() === 'discount10') {
         setDiscount(10);
+        setPlayFartSound(prev => !prev); // Toggle to trigger sound effect
       } else {
         setDiscount(0);
         alert('Invalid coupon code');
@@ -37,10 +51,13 @@ const CartPage: React.FC = () => {
       setIsApplyingCoupon(false);
     }, 500);
   };
-
   if (items.length === 0) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8">        <FartSound 
+          playSound={playFartSound}
+          onSoundPlayed={() => console.log('Fart sound played on empty cart!')} 
+          soundVariation="squeaky"
+        />
         <h1 className="text-2xl font-bold mb-8">Your Cart</h1>
         <div className="bg-gray-800 rounded-lg p-8 text-center">
           <p className="text-lg mb-4">Your cart is empty</p>
@@ -53,7 +70,12 @@ const CartPage: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8">      <FartSound 
+        playSound={playFartSound}
+        onSoundPlayed={() => console.log('Fart sound played on item removal!')}
+        targetElementId={removedItemId ? `cart-item-${removedItemId}` : undefined}
+        soundVariation="wet"
+      />
       <h1 className="text-2xl font-bold mb-8">Your Cart</h1>
       
       <div className="flex flex-col lg:flex-row gap-6">
@@ -72,9 +94,8 @@ const CartPage: React.FC = () => {
                   <th scope="col" className="px-4 py-3 text-left text-sm font-medium text-white">Remove</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-700">
-                {items.map((item, index) => (
-                  <tr key={item.id}>
+              <tbody className="divide-y divide-gray-700">                {items.map((item, index) => (
+                  <tr key={item.id} id={`cart-item-${item.id}`}>
                     <td className="px-4 py-4 whitespace-nowrap text-sm text-white">{index + 1}</td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm text-white">
                       <img src={item.image} alt={item.name} className="h-16 w-16 object-contain" />
@@ -160,8 +181,11 @@ const CartPage: React.FC = () => {
                 <span className="font-bold">${grandTotal.toFixed(2)}</span>
               </div>
             </div>
-            
-            <button className="mt-6 w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded text-center font-medium">
+              <button 
+              onClick={handleCheckout}
+              className="mt-6 w-full bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded text-center font-medium"
+              id="checkout-button"
+            >
               Proceed To Checkout
             </button>
             

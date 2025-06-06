@@ -18,6 +18,9 @@ body {
   min-height: 100vh;
 }
 
+/* Import for fart animation effects */
+@import './components/effects/FartAnimation.css';
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
