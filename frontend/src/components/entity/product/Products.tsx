@@ -16,13 +16,37 @@ interface Product {
 }
 
 const fetchProducts = async (): Promise<Product[]> => {
-  const { data } = await axios.get(`${api.baseURL}${api.endpoints.products}`);
-  return data;
+  try {
+    console.log(`Fetching products from: ${api.baseURL}${api.endpoints.products}`);
+    const response = await axios.get(`${api.baseURL}${api.endpoints.products}`);
+    console.log('Products API response:', response);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    if (axios.isAxiosError(error)) {
+      console.error('Axios error details:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          headers: error.config?.headers
+        }
+      });
+    }
+    throw error;
+  }
 };
 
 export default function Products() {
   const [quantities, setQuantities] = useState<Record<number, number>>({});
-  const { data: products, isLoading, error } = useQuery('products', fetchProducts);
+  const { data: products, isLoading, error, refetch } = useQuery('products', fetchProducts, {
+    onError: (err) => {
+      console.error('Query error in Products component:', err);
+    }
+  });
   const { addItem } = useCart();
 
   const handleQuantityChange = (productId: number, change: number) => {
@@ -31,6 +55,7 @@ export default function Products() {
       [productId]: Math.max(0, (prev[productId] || 0) + change)
     }));
   };
+  
   const handleAddToCart = (productId: number) => {
     const quantity = quantities[productId] || 0;
     if (quantity > 0) {
@@ -43,11 +68,12 @@ export default function Products() {
           image: `/${product.imgName}`,
           quantity: quantity
         });
+        // Reset quantity after adding to cart
+        setQuantities(prev => ({
+          ...prev,
+          [productId]: 0
+        }));
       }
-      setQuantities(prev => ({
-        ...prev,
-        [productId]: 0
-      }));
     }
   };
 
@@ -67,7 +93,15 @@ export default function Products() {
     return (
       <div className="min-h-screen bg-dark pt-20 px-4">
         <div className="max-w-7xl mx-auto">
-          <div className="text-red-500 text-center">Failed to fetch products</div>
+          <div className="text-red-500 text-center">
+            <p>Failed to fetch products</p>
+            <button 
+              onClick={() => refetch()} 
+              className="mt-4 px-4 py-2 bg-primary text-white rounded-lg hover:bg-accent"
+            >
+              Try Again
+            </button>
+          </div>
         </div>
       </div>
     );
